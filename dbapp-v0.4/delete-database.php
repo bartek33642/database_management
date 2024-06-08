@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
 if (!isset($_SESSION['loggedin'])) {
@@ -18,16 +22,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dbName'])) {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         // Sprawdzenie czy użytkownik ma prawo usunąć tę bazę danych
-        if ($isAdmin || strpos($dbName, $login . '_') === 0) {
+        $stmt = $pdo->prepare("SELECT * FROM user_databases WHERE db_name = :dbName AND user_id = :user_id");
+        $stmt->execute(['dbName' => $dbName, 'user_id' => $user_id]);
+        $db = $stmt->fetch();
+
+        if ($isAdmin || $db) {
             $pdo->exec("DROP DATABASE `$dbName`");
-            echo 'Database deleted successfully!';
+            $stmt = $pdo->prepare("DELETE FROM user_databases WHERE db_name = :dbName AND user_id = :user_id");
+            $stmt->execute(['dbName' => $dbName, 'user_id' => $user_id]);
+        
+            echo 'Database and its corresponding entry in user_databases deleted successfully!';
         } else {
-            echo 'Unauthorized action!';
+            echo 'Unauthorized action! The database does not belong to the user.';
         }
     } catch (PDOException $e) {
         echo 'Error deleting database: ' . $e->getMessage();
     }
+} else {
+    echo 'No database name provided.';
 }
 
 header('Location: ' . ($isAdmin ? 'admin.php' : 'user.php'));
 exit;
+?>
