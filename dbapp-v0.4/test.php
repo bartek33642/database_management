@@ -1,7 +1,7 @@
 <?php
 
 try {
-   $pdo = new PDO('mysql:host=localhost;dbname=customer_db', 'root', '');
+   $pdo = new PDO('mysql:host=localhost;dbname=customer_db_806', 'root', '');
    echo 'Połączenie nawiązane!';
 } catch (PDOException $e) {
    echo 'Połączenie nie mogło zostać utworzone: ' . $e->getMessage();
@@ -11,7 +11,7 @@ try {
 
 
 try {
-   $pdo = new PDO('mysql:host=localhost;dbname=customer_db', 'root', '');
+   $pdo = new PDO('mysql:host=localhost;dbname=customer_db_806', 'root', '');
    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
    echo 'Połączenie nawiązane!<br>';
 

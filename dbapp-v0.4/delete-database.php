@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dbName'])) {
     $dbName = $_POST['dbName'];
 
     try {
-        $pdo = new PDO('mysql:host=localhost;dbname=customer_db', 'root', '');
+        $pdo = new PDO('mysql:host=localhost;dbname=customer_db_806', 'root', '');
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         // Sprawdzenie czy użytkownik ma prawo usunąć tę bazę danych

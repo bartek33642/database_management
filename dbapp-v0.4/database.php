@@ -14,7 +14,7 @@
     <li><strong>DB Reserv</strong></li>
   </ul>
   <ul>
-    <li><a href="/dbapp-v0.4">Home</a></li>
+    <li><a href="/zetes2">Home</a></li>
     <li><a href="#">About</a></li>
         <li><a href="sign-out.php">Sign out</a></li>
   </ul>

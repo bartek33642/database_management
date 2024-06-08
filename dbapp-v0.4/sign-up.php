@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please fill all fields!';
     } else {
         try {
-            $pdo = new PDO('mysql:host=localhost;dbname=customer_db', 'root', '');
+            $pdo = new PDO('mysql:host=localhost;dbname=customer_db_806', 'root', '');
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             $stmt = $pdo->prepare('SELECT * FROM users WHERE email = :email');
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <li><strong>DB Reserv</strong></li>
   </ul>
   <ul>
-    <li><a href="/dbapp-v0.4">Home</a></li>
+    <li><a href="/zetes2">Home</a></li>
     <li><a href="#">About</a></li>
     <li><a href="sign-in.php">Sign in</a></li>
 </nav>

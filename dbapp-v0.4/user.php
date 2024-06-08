@@ -12,7 +12,7 @@ $user_id = $_SESSION['user_id'];
 $login = 'user_'.$user_id;
 
 // Połączenie z bazą danych
-$pdo = new PDO('mysql:host=localhost;dbname=customer_db', 'root', '');
+$pdo = new PDO('mysql:host=localhost;dbname=customer_db_806', 'root', '');
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Obsługa formularza dodawania bazy danych
@@ -31,22 +31,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dbName'])) {
         try {
             // Tworzenie bazy danych
             $pdo->exec("CREATE DATABASE `$dbName`");
-
+    
             // Tworzenie użytkownika z uprawnieniami do nowej bazy danych
             $pdo->exec("CREATE USER IF NOT EXISTS '$login'@'localhost' IDENTIFIED BY '$password'");
             $pdo->exec("GRANT ALL PRIVILEGES ON `$dbName`.* TO '$login'@'localhost'");
             $pdo->exec("FLUSH PRIVILEGES");
-
-            echo 'Database created successfully!';
+    
+            // Dodawanie informacji o nowej bazie danych do tabeli user_databases
+            $stmt = $pdo->prepare("INSERT INTO user_databases (user_id, db_name) VALUES (:user_id, :db_name)");
+            $stmt->execute(['user_id' => $user_id, 'db_name' => $dbName]);
+    
+            echo 'Database created successfully and information added to user_databases!';
         } catch (PDOException $e) {
-            echo 'Error creating database: ' . $e->getMessage();
+            echo 'Error: ' . $e->getMessage();
         }
     }
 }
 
 // Pobranie listy baz danych utworzonych przez użytkownika
-$stmt = $pdo->prepare("SHOW DATABASES LIKE ?");
-$stmt->execute(["$login%"]);
+// $stmt = $pdo->prepare("SHOW DATABASES LIKE ?");
+// $stmt->execute(["$login%"]);
+// $databases = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$stmt = $pdo->prepare("SELECT db_name FROM user_databases WHERE user_id = :user_id");
+$stmt->execute(['user_id' => $user_id]);
 $databases = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 ?>
@@ -71,7 +79,7 @@ $databases = $stmt->fetchAll(PDO::FETCH_COLUMN);
             <li><strong>DB Reserv</strong></li>
         </ul>
         <ul>
-            <li><a href="/dbapp-v0.4">Home</a></li>
+            <li><a href="/zetes2">Home</a></li>
             <li><a href="#">About</a></li>
             <li><a href="sign-out.php">Sign out</a></li>  
         </ul>

@@ -13,6 +13,6 @@ if (isset($_COOKIE['token'])) {
 }
 
 // Przekierowanie użytkownika na stronę logowania
-header('Location: /dbapp-v0.4/sign-in.php');
+header('Location: /zetes2/sign-in.php');
 exit;
 ?>
