@@ -1,0 +1,16 @@
+CREATE DATABASE IF NOT EXISTS customer_db;
+
+USE customer_db;
+
+CREATE TABLE IF NOT EXISTS users (
+ user_id INT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(50),
+ second_name VARCHAR(50),
+ email VARCHAR(50),
+ password VARCHAR(255) NOT NULL,
+ role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+ activity_item BOOLEAN NOT NULL DEFAULT 0
+);
+
+INSERT INTO users (name, second_name, email, password, role, activity_item) VALUES
+('Name', 'Surname', 'user@example.com', '$2b$12$GiMpzRr4juBg8TtATyPK0eCj08Ts1/EXjjRlLMOdcImiIOIk0C20a', 'admin', 1);
