@@ -14,3 +14,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 INSERT INTO users (name, second_name, email, password, role, activity_item) VALUES
 ('Name', 'Surname', 'user@example.com', '$2b$12$GiMpzRr4juBg8TtATyPK0eCj08Ts1/EXjjRlLMOdcImiIOIk0C20a', 'admin', 1);
+
+CREATE TABLE user_databases (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    db_name VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
