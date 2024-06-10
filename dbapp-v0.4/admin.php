@@ -81,9 +81,15 @@
         $stmt = $pdo->query("SHOW DATABASES");
         $databases = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
+
+        // Wyświetlanie informacji o użytkownikach bazy danych
+        $stmt = $pdo->query('SELECT user_databases.db_name, users.name, users.second_name FROM user_databases JOIN users ON user_databases.user_id = users.user_id');
+        $user_databases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
         echo '<h2>All Databases</h2>';
         echo '<table class="striped">';
-        echo '<thead><tr><th scope="col">Database Name</th><th scope="col">Actions</th></tr></thead>';
+        echo '<thead><tr><th scope="col">Database Name</th><th scope="col">User Name</th><th scope="col">Actions</th></tr></thead>';
         echo '<tbody>';
 
         if (empty($databases)) {
@@ -91,15 +97,20 @@
         } else {
             foreach ($databases as $db) {
                 if ($db !== 'information_schema' && $db !== 'performance_schema' && $db !== 'mysql' && $db !== 'sys') { // Filtrujemy bazy systemowe
-                    echo '<tr>';
-                    echo '<td>' . htmlspecialchars($db) . '</td>';
-                    echo '<td>';
-                    echo '<form method="post" action="delete-database.php" onsubmit="return confirmDelete(\'' . htmlspecialchars($db) . '\');">';
-                    echo '<input type="hidden" name="dbName" value="' . htmlspecialchars($db) . '">';
-                    echo '<button type="submit" class="outline">Delete</button>';
-                    echo '</form>';
-                    echo '</td>';
-                    echo '</tr>';
+                    foreach ($user_databases as $user_db) {
+                        if ($user_db['db_name'] == $db) {
+                            echo '<tr>';
+                            echo '<td>' . htmlspecialchars($db) . '</td>';
+                            echo '<td>' . htmlspecialchars($user_db['name']) . ' ' . htmlspecialchars($user_db['second_name']) . '</td>';
+                            echo '<td>';
+                            echo '<form method="post" action="delete-database.php" onsubmit="return confirmDelete(\'' . htmlspecialchars($db) . '\');">';
+                            echo '<input type="hidden" name="dbName" value="' . htmlspecialchars($db) . '">';
+                            echo '<button type="submit" class="outline">Delete</button>';
+                            echo '</form>';
+                            echo '</td>';
+                            echo '</tr>';
+                        }
+                    }
                 }
             }
         }

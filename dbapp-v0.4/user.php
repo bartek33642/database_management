@@ -16,13 +16,14 @@ $pdo = new PDO('mysql:host=localhost;dbname=customer_db', 'root', '');
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 // Obsługa formularza dodawania bazy danych
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dbName'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dbName'], $_POST['userLogin'], $_POST['userPassword'])) {
     $dbName = $_POST['dbName'];
-    $password = 'password_for_' . $login; // Możesz dostosować hasło jak chcesz
+    $userLogin = $_POST['userLogin'];
+    $userPassword = $_POST['userPassword'];
 
     // Sprawdzenie czy użytkownik nie przekroczył limitu 10 baz danych
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name LIKE :prefix");
-    $stmt->execute(['prefix' => $login . '_%']);
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM user_databases WHERE user_id = :user_id");
+    $stmt->execute(['user_id' => $user_id]);
     $dbCount = $stmt->fetchColumn();
 
     if ($dbCount >= 10) {
@@ -31,23 +32,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dbName'])) {
         try {
             // Tworzenie bazy danych
             $pdo->exec("CREATE DATABASE `$dbName`");
-
-            // Tworzenie użytkownika z uprawnieniami do nowej bazy danych
-            $pdo->exec("CREATE USER IF NOT EXISTS '$login'@'localhost' IDENTIFIED BY '$password'");
-            $pdo->exec("GRANT ALL PRIVILEGES ON `$dbName`.* TO '$login'@'localhost'");
+    
+         // Tworzenie użytkownika z uprawnieniami do nowej bazy danych
+            $pdo->exec("CREATE USER IF NOT EXISTS '$userLogin'@'localhost' IDENTIFIED BY '$userPassword'");
+            $pdo->exec("GRANT ALL PRIVILEGES ON `$dbName`.* TO '$userLogin'@'localhost'");
             $pdo->exec("FLUSH PRIVILEGES");
-
-            echo 'Database created successfully!';
+    
+            // Dodawanie informacji o nowej bazie danych do tabeli user_databases
+            $stmt = $pdo->prepare("INSERT INTO user_databases (user_id, db_name, user_login, user_password) VALUES (:user_id, :db_name, :user_login, :user_password)");
+            $stmt->execute(['user_id' => $user_id, 'db_name' => $dbName, 'user_login' => $userLogin, 'user_password' => password_hash($userPassword, PASSWORD_DEFAULT)]);
+            echo 'Database created successfully and information added to user_databases!';
         } catch (PDOException $e) {
-            echo 'Error creating database: ' . $e->getMessage();
+            echo 'Error: ' . $e->getMessage();
         }
     }
 }
 
 // Pobranie listy baz danych utworzonych przez użytkownika
-$stmt = $pdo->prepare("SHOW DATABASES LIKE ?");
-$stmt->execute(["$login%"]);
-$databases = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$stmt = $pdo->prepare("SELECT db_name, user_login, user_password FROM user_databases WHERE user_id = :user_id");
+$stmt->execute(['user_id' => $user_id]);
+$databases = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 <!doctype html>
@@ -78,32 +82,39 @@ $databases = $stmt->fetchAll(PDO::FETCH_COLUMN);
     </nav>
     <h1>Database Management</h1>
     <form method="post">
-        <input type="text" name="dbName" placeholder="Database Name" aria-label="Database Name" required />
-        <button type="submit">Create Database</button>
+    <input type="text" name="dbName" placeholder="Database Name" aria-label="Database Name" required />
+        <input type="text" name="userLogin" placeholder="User Login" aria-label="User Login" required />
+        <input type="password" name="userPassword" placeholder="User Password" aria-label="User Password" required />
+        <button type="submit">Create Database</button>        
     </form>
     <h2>Your Databases</h2>
     <table class="striped">
         <thead>
             <tr>
                 <th scope="col">Database Name</th>
+                <th scope="col">User Login</th>
+                <th scope="col">User Password</th>
                 <th scope="col">Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($databases)) : ?>
                 <tr>
-                    <td colspan="2">No databases found.</td>
+                    <td colspan="4">No databases found.</td>
                 </tr>
             <?php else : ?>
                 <?php foreach ($databases as $db): ?>
                     <tr>
-                        <td><?= htmlspecialchars($db) ?></td>
-                        <td>
-                            <form method="post" action="delete-database.php" onsubmit="return confirmDelete('<?= htmlspecialchars($db) ?>');">
-                                <input type="hidden" name="dbName" value="<?= htmlspecialchars($db) ?>">
-                                <button type="submit" class="outline">Delete</button>
-                            </form>
-                        </td>
+                    <td><?= htmlspecialchars($db['db_name']) ?></td>
+                    <td><?= htmlspecialchars($db['user_login']) ?></td>
+                    <td><?= htmlspecialchars($db['user_password']) ?></td>
+                    <td>
+                    <form method="post" action="delete-database.php" onsubmit="return confirmDelete('<?= htmlspecialchars($db['db_name']) ?>');">
+                        <input type="hidden" name="dbName" value="<?= htmlspecialchars($db['db_name']) ?>">
+                        <button type="submit" class="outline">Delete</button>
+                    </form>
+                </td>
+
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
